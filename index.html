@@ -3,10 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat to WhatsApp Without Saving Numbers | WA Direct Link</title>
+    
+    <title>WA Direct Link Generator - Chat on WhatsApp Without Saving Numbers</title>
+    <meta name="description" content="Generate a direct WhatsApp chat link for Indonesian numbers (08...) instantly without saving the contact. Fast, free, and simple PWA tool.">
+    <meta name="keywords" content="whatsapp link, wa me, chat tanpa simpan nomor, wa direct, whatsapp generator, 62, 08">
+    <link rel="canonical" href="https://YOUR-CUSTOM-DOMAIN.com/">
+    
+    <meta property="og:title" content="WA Direct Link Generator">
+    <meta property="og:description" content="Chat on WhatsApp instantly without saving the number.">
+    <meta property="og:image" content="https://YOUR-CUSTOM-DOMAIN.com/wa-icon-512.png">
+    <meta property="og:url" content="https://YOUR-CUSTOM-DOMAIN.com/">
+    <meta property="og:type" content="website">
+
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/wa-icon-192.png"> 
     <meta name="theme-color" content="#25D366"/>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX'); // REPLACE with your GA4 Measurement ID
+    </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -25,12 +44,10 @@
         <p class="text-sm text-gray-500 mb-6 text-center">Just input the number in the field below and press "Open Whatsapp Link".</p>
 
         <div class="mb-4">
-            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">WhatsApp Number (Example: 081234567890)</label>
+            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">WhatsApp Number (Example: 081234567890 or +62812...)</label>
             <input type="tel" id="phoneNumber" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="0812xxxxxxx" required>
             
-            <p id="nonNumericError" class="text-red-500 text-xs mt-1 hidden">Non-numerical input detected.</p>
-            
-            <p id="errorMsg" class="text-red-500 text-xs mt-1 hidden">Invalid format. Please start with **08** and use 8-15 digits.</p>
+            <p id="errorMsg" class="text-red-500 text-xs mt-1 hidden">Invalid format. Please use **08...** or **+628...** (8-15 digits after country code).</p>
         </div>
         
         <div class="space-y-4">
@@ -49,103 +66,71 @@
         const phoneInput = document.getElementById('phoneNumber');
         const openChatBtn = document.getElementById('openChatBtn');
         const copyLinkBtn = document.getElementById('copyLinkBtn');
-        const errorMsg = document.getElementById('errorMsg'); // Format/length error
-        const nonNumericError = document.getElementById('nonNumericError'); // New non-numeric error
+        const errorMsg = document.getElementById('errorMsg');
         const successMsg = document.getElementById('successMsg');
         
         const WA_BASE_URL = 'https://wa.me/';
 
-        function formatNumber(localNumber) {
-            // Remove all non-digit characters
-            let cleanNumber = localNumber.replace(/\D/g, ''); 
-            
-            if (cleanNumber.startsWith('08')) {
-                // Replace '0' with '62' (for Indonesian country code)
-                return '62' + cleanNumber.substring(1);
-            }
-            return cleanNumber;
-        }
-
-        function setInputError(isError, errorElement) {
+        function setInputError(isError) {
             if (isError) {
-                errorElement.classList.remove('hidden');
+                errorMsg.classList.remove('hidden');
                 phoneInput.classList.add('border-red-500'); 
                 phoneInput.classList.remove('focus:ring-green-500', 'focus:border-green-500');
-                // Disable buttons when invalid input is present
                 openChatBtn.disabled = true;
                 copyLinkBtn.disabled = true;
             } else {
-                errorElement.classList.add('hidden');
+                errorMsg.classList.add('hidden');
                 phoneInput.classList.remove('border-red-500');
                 phoneInput.classList.add('focus:ring-green-500', 'focus:border-green-500');
                 openChatBtn.disabled = false;
                 copyLinkBtn.disabled = false;
             }
         }
-        
+
+        function formatNumber(localNumber) {
+            // 1. Strip ALL non-digit characters (spaces, dashes, +, etc.)
+            let cleanNumber = String(localNumber).replace(/\D/g, ''); 
+            
+            // 2. Handle 62 prefix
+            if (cleanNumber.startsWith('62')) {
+                return cleanNumber;
+            }
+            
+            // 3. Handle 0 prefix (Indonesian local format)
+            if (cleanNumber.startsWith('08')) {
+                // Replace '0' with '62'
+                return '62' + cleanNumber.substring(1);
+            }
+            
+            // Return original clean number if it doesn't match expected prefixes
+            return cleanNumber;
+        }
+
         // --- Core Link Generation and Validation ---
         function generateLink() {
             const inputVal = phoneInput.value;
-            const formattedNum = formatNumber(inputVal);
-
-            // Check for non-numeric input first (but allow + sign for other countries if needed)
-            const isNonNumeric = /[^0-9]/.test(inputVal.replace(/^\+/, ''));
-            if (isNonNumeric) {
-                // If non-numeric input is detected, show that specific error and stop.
-                setInputError(true, nonNumericError);
-                return null;
-            } else {
-                setInputError(false, nonNumericError);
-            }
+            const cleanedNum = formatNumber(inputVal); 
             
-            // Validation: Ensure it starts with 08 and results in a valid length
-            const isValidFormat = inputVal.startsWith('08') && formattedNum.length >= 11 && formattedNum.length <= 18; 
+            // Validation: Must result in a 62-prefixed number AND be a valid length
+            const startsWith62 = cleanedNum.startsWith('62');
+            const isValidLength = cleanedNum.length >= 11 && cleanedNum.length <= 18; 
             
-            if (!isValidFormat) {
-                // If format is invalid (not 08 or wrong length), show that error and stop.
-                setInputError(true, errorMsg);
+            if (!startsWith62 || !isValidLength) {
+                setInputError(true);
                 return null;
             }
             
             // Success state
-            setInputError(false, errorMsg);
-            return WA_BASE_URL + formattedNum;
+            setInputError(false);
+            return WA_BASE_URL + cleanedNum;
         }
 
         // --- Event Listeners ---
         
-        // Real-time check for non-numerical characters
-        phoneInput.addEventListener('input', () => {
-            // Check for non-numerical input in real-time
-            const isNonNumeric = /[^0-9]/.test(phoneInput.value);
-            
-            if (isNonNumeric) {
-                setInputError(true, nonNumericError);
-            } else {
-                // If input is clean, re-enable buttons and hide non-numeric error
-                setInputError(false, nonNumericError);
-                
-                // Also hide other errors until button is pressed
-                errorMsg.classList.add('hidden'); 
-                successMsg.classList.add('hidden'); 
-                phoneInput.classList.remove('border-red-500');
-                phoneInput.classList.add('focus:ring-green-500', 'focus:border-green-500');
-            }
-        });
-
-
-        // Auto-clean input when the user leaves the field
-        phoneInput.addEventListener('blur', () => {
-            // Strip any remaining non-digits
-            phoneInput.value = phoneInput.value.replace(/[^0-9]/g, '');
-            // Re-validate to ensure clean state
-            generateLink(); 
-        });
-
         // 1. Open Chat Button Handler
         openChatBtn.addEventListener('click', () => {
             successMsg.classList.add('hidden');
-            const waLink = generateLink();
+            const waLink = generateLink(); 
             if (waLink) {
                 window.open(waLink, '_blank'); 
             }
@@ -153,7 +138,7 @@
 
         // 2. Copy Link Button Handler
         copyLinkBtn.addEventListener('click', () => {
-            const waLink = generateLink();
+            const waLink = generateLink(); 
             if (waLink) {
                 navigator.clipboard.writeText(waLink).then(() => {
                     successMsg.textContent = 'Link copied successfully: ' + waLink;
@@ -166,18 +151,5 @@
             }
         });
 
-        // PWA Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('ServiceWorker registration failed: ', error);
-                    });
-            });
-        }
-    </script>
-</body>
-</html>
+        // 3. Clear errors when user types
+        phoneInput
