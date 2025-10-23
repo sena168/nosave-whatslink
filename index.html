@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat to WhatsApp Without Saving Numbers | WA Me Link Generator (MVP)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for PWA feel */
+        body {
+            background-color: #f7f7f7; /* Light gray background */
+        }
+        .card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="p-4 flex items-center justify-center min-h-screen">
+
+    <div class="card w-full max-w-md bg-white rounded-xl p-6 md:p-8">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">Chat to Whatsapp without saving numbers 🚀</h1>
+        <p class="text-sm text-gray-500 mb-6 text-center">Just input the number in the field below and press "Open Whatsapp Link".</p>
+
+        <div class="mb-4">
+            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">WhatsApp Number (Example: 081234567890)</label>
+            <input type="tel" id="phoneNumber" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="0812xxxxxxx" pattern="^08[0-9]{7,15}$" required>
+            <p id="errorMsg" class="text-red-500 text-xs mt-1 hidden">Invalid format. Please start with **08** and use 8-15 digits.</p>
+        </div>
+        
+        <div class="space-y-4">
+            <button id="openChatBtn" class="w-full flex items-center justify-center px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
+                Open Whatsapp Link 💬
+            </button>
+            <button id="copyLinkBtn" class="w-full flex items-center justify-center px-4 py-2 border border-green-600 text-base font-medium rounded-lg text-green-600 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
+                Copy Link 🔗
+            </button>
+            <p id="successMsg" class="text-center text-sm text-green-600 hidden">Link copied successfully!</p>
+        </div>
+
+    </div>
+
+    <script>
+        const phoneInput = document.getElementById('phoneNumber');
+        const openChatBtn = document.getElementById('openChatBtn');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        
+        // Base URL for WhatsApp Click to Chat
+        const WA_BASE_URL = 'https://wa.me/';
+
+        // Function to clean and convert the number (08... to 628...)
+        function formatNumber(localNumber) {
+            // 1. Remove all non-digit characters
+            let cleanNumber = localNumber.replace(/\D/g, ''); 
+            
+            // 2. Check if it starts with '08'
+            if (cleanNumber.startsWith('08')) {
+                // 3. Replace '0' with '62' (for Indonesian country code)
+                return '62' + cleanNumber.substring(1);
+            }
+            // Return original clean number if it doesn't match 08 (will likely fail on WA)
+            return cleanNumber;
+        }
+
+        // Function to generate the full WA link
+        function generateLink() {
+            const inputVal = phoneInput.value;
+            const formattedNum = formatNumber(inputVal);
+            
+            // Validation: Must start with 08 and result in a valid international length (11-18 digits)
+            const isValid = inputVal.replace(/\D/g, '').startsWith('08') && formattedNum.length >= 11 && formattedNum.length <= 18; 
+            
+            if (!isValid) {
+                errorMsg.classList.remove('hidden');
+                return null;
+            }
+
+            errorMsg.classList.add('hidden');
+            return WA_BASE_URL + formattedNum;
+        }
+
+        // --- Event Listeners ---
+
+        // 1. Open Chat Button Handler
+        openChatBtn.addEventListener('click', () => {
+            successMsg.classList.add('hidden'); // Hide copy message
+            const waLink = generateLink();
+            if (waLink) {
+                // Open the link in a new tab/window for safety
+                window.open(waLink, '_blank'); 
+            }
+        });
+
+        // 2. Copy Link Button Handler
+        copyLinkBtn.addEventListener('click', () => {
+            const waLink = generateLink();
+            if (waLink) {
+                // Use the modern Clipboard API
+                navigator.clipboard.writeText(waLink).then(() => {
+                    successMsg.textContent = 'Link copied successfully! ' + waLink;
+                    successMsg.classList.remove('hidden');
+                    // Hide after 3 seconds
+                    setTimeout(() => successMsg.classList.add('hidden'), 3000); 
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert('Failed to copy link
