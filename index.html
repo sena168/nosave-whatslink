@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>WA Direct Link Generator - Chat on WhatsApp Without Saving Numbers</title>
-    <meta name="description" content="Generate a direct WhatsApp chat link for Indonesian numbers (08...) instantly without saving the contact. Fast, free, and simple PWA tool.">
-    <meta name="keywords" content="whatsapp link, wa me, chat tanpa simpan nomor, wa direct, whatsapp generator, 62, 08">
+    <title>Global WA Direct Link Generator - Chat on WhatsApp Without Saving Numbers</title>
+    <meta name="description" content="Generate a direct WhatsApp chat link for any country instantly without saving the contact. Fast, free, and simple PWA tool.">
+    <meta name="keywords" content="whatsapp link, wa me, chat tanpa simpan nomor, global whatsapp generator, +62, +1, +60">
     <link rel="canonical" href="https://YOUR-CUSTOM-DOMAIN.com/">
-    
-    <meta property="og:title" content="WA Direct Link Generator">
+    <meta property="og:title" content="Global WA Direct Link Generator">
     <meta property="og:description" content="Chat on WhatsApp instantly without saving the number.">
     <meta property="og:image" content="https://YOUR-CUSTOM-DOMAIN.com/wa-icon-512.png">
     <meta property="og:url" content="https://YOUR-CUSTOM-DOMAIN.com/">
@@ -35,19 +34,33 @@
         .card {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
         }
+        /* Modal backdrop for country selector */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
 <body class="p-4 flex items-center justify-center min-h-screen">
 
     <div class="card w-full max-w-md bg-white rounded-xl p-6 md:p-8">
-        <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">Chat to Whatsapp without saving numbers 🚀</h1>
-        <p class="text-sm text-gray-500 mb-6 text-center">Just input the number in the field below and press "Open Whatsapp Link".</p>
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">Global WA Direct Link Generator 🌎</h1>
+        <p class="text-sm text-gray-500 mb-6 text-center">Select the country code, input the number, and chat without saving contacts.</p>
 
         <div class="mb-4">
-            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">WhatsApp Number (Example: 081234567890 or +62812...)</label>
-            <input type="tel" id="phoneNumber" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="0812xxxxxxx" required>
+            <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
+            <div class="flex">
+                <button id="countrySelectorBtn" class="flex-shrink-0 inline-flex items-center py-2.5 px-3 text-sm font-medium text-gray-900 bg-gray-100 border border-gray-300 rounded-l-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700 dark:text-white dark:border-gray-600 transition duration-150">
+                    <span id="selectedFlag">🇮🇩</span>
+                    <span id="selectedCode" class="ml-2">+62</span>
+                    <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                    </svg>
+                </button>
+                
+                <input type="tel" id="phoneNumber" class="block w-full px-3 py-2 border border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 placeholder:text-gray-400" placeholder="812xxxxxxx" required>
+            </div>
             
-            <p id="errorMsg" class="text-red-500 text-xs mt-1 hidden">Invalid format. Please use **08...** or **+628...** (8-15 digits after country code).</p>
+            <p id="errorMsg" class="text-red-500 text-xs mt-1 hidden">Invalid number. Please check the code and number length.</p>
         </div>
         
         <div class="space-y-4">
@@ -62,6 +75,24 @@
 
     </div>
 
+    <div id="countryModal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-backdrop transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm m-4 max-h-[80vh] flex flex-col">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Select Country Code</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-4 border-b">
+                <input type="text" id="countrySearch" placeholder="Search country or code..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-green-500 focus:border-green-500">
+            </div>
+            
+            <div id="countryList" class="flex-grow overflow-y-auto p-2 space-y-1">
+                </div>
+        </div>
+    </div>
+
     <script>
         const phoneInput = document.getElementById('phoneNumber');
         const openChatBtn = document.getElementById('openChatBtn');
@@ -69,10 +100,23 @@
         const errorMsg = document.getElementById('errorMsg');
         const successMsg = document.getElementById('successMsg');
         
+        const countrySelectorBtn = document.getElementById('countrySelectorBtn');
+        const selectedFlag = document.getElementById('selectedFlag');
+        const selectedCode = document.getElementById('selectedCode');
+        const countryModal = document.getElementById('countryModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const countrySearch = document.getElementById('countrySearch');
+        const countryList = document.getElementById('countryList');
+        
         const WA_BASE_URL = 'https://wa.me/';
+        let countriesData = [];
+        let currentCountry = { name: "Indonesia", code: "62", flag: "🇮🇩" }; // Default to Indonesia
 
-        function setInputError(isError) {
+        // --- Core Utility Functions ---
+
+        function setInputError(isError, message = 'Invalid number. Please check the code and number length.') {
             if (isError) {
+                errorMsg.textContent = message;
                 errorMsg.classList.remove('hidden');
                 phoneInput.classList.add('border-red-500'); 
                 phoneInput.classList.remove('focus:ring-green-500', 'focus:border-green-500');
@@ -87,36 +131,26 @@
             }
         }
 
-        function formatNumber(localNumber) {
-            // 1. Strip ALL non-digit characters (spaces, dashes, +, etc.)
-            let cleanNumber = String(localNumber).replace(/\D/g, ''); 
+        function formatNumber(phoneNumber) {
+            // 1. Strip ALL non-digit characters from the phone number input
+            let cleanNumber = String(phoneNumber).replace(/\D/g, ''); 
             
-            // 2. Handle 62 prefix
-            if (cleanNumber.startsWith('62')) {
-                return cleanNumber;
-            }
-            
-            // 3. Handle 0 prefix (Indonesian local format)
-            if (cleanNumber.startsWith('08')) {
-                // Replace '0' with '62'
-                return '62' + cleanNumber.substring(1);
-            }
-            
-            // Return original clean number if it doesn't match expected prefixes
-            return cleanNumber;
+            // 2. Prepend the currently selected country code
+            return currentCountry.code + cleanNumber;
         }
 
-        // --- Core Link Generation and Validation ---
+        // --- Link Generation and Validation ---
+
         function generateLink() {
             const inputVal = phoneInput.value;
+            // Key change: number is now just the local part. We combine it with currentCountry.code
             const cleanedNum = formatNumber(inputVal); 
             
-            // Validation: Must result in a 62-prefixed number AND be a valid length
-            const startsWith62 = cleanedNum.startsWith('62');
-            const isValidLength = cleanedNum.length >= 11 && cleanedNum.length <= 18; 
+            // Validation: Must have a code and a reasonable length after the code
+            const minLength = currentCountry.code.length + 5; // e.g., 62 + 5 digits = 7 minimum
             
-            if (!startsWith62 || !isValidLength) {
-                setInputError(true);
+            if (cleanedNum.length < minLength || cleanedNum.length > 18) {
+                setInputError(true, `Number is too short/long for +${currentCountry.code}. Please ensure you only enter the local number.`);
                 return null;
             }
             
@@ -125,9 +159,67 @@
             return WA_BASE_URL + cleanedNum;
         }
 
+
+        // --- Country Selector Logic ---
+
+        async function loadCountries() {
+            try {
+                const response = await fetch('/countries.json');
+                countriesData = await response.json();
+                renderCountryList(countriesData);
+            } catch (error) {
+                console.error("Failed to load country data:", error);
+            }
+        }
+
+        function renderCountryList(list) {
+            countryList.innerHTML = ''; // Clear previous list
+            list.forEach(country => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-2 cursor-pointer hover:bg-green-50 rounded-lg transition duration-100';
+                item.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="mr-3 text-xl">${country.flag}</span>
+                        <span>${country.name}</span>
+                    </div>
+                    <span class="text-sm text-gray-500">+${country.code}</span>
+                `;
+                item.addEventListener('click', () => selectCountry(country));
+                countryList.appendChild(item);
+            });
+        }
+
+        function selectCountry(country) {
+            currentCountry = country;
+            selectedFlag.textContent = country.flag;
+            selectedCode.textContent = '+' + country.code;
+            phoneInput.placeholder = country.name === 'Indonesia' ? '812xxxxxxx' : 'Local number...';
+            countryModal.classList.add('hidden');
+            setInputError(false); // Clear error on new country selection
+        }
+
         // --- Event Listeners ---
-        
-        // 1. Open Chat Button Handler
+
+        countrySelectorBtn.addEventListener('click', () => {
+            countryModal.classList.remove('hidden');
+            countrySearch.value = '';
+            countrySearch.focus();
+            renderCountryList(countriesData);
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            countryModal.classList.add('hidden');
+        });
+
+        countrySearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = countriesData.filter(country => 
+                country.name.toLowerCase().includes(searchTerm) || 
+                country.code.includes(searchTerm)
+            );
+            renderCountryList(filtered);
+        });
+
         openChatBtn.addEventListener('click', () => {
             successMsg.classList.add('hidden');
             const waLink = generateLink(); 
@@ -136,7 +228,6 @@
             }
         });
 
-        // 2. Copy Link Button Handler
         copyLinkBtn.addEventListener('click', () => {
             const waLink = generateLink(); 
             if (waLink) {
@@ -151,24 +242,19 @@
             }
         });
 
-        // 3. Clear errors when user types
         phoneInput.addEventListener('input', () => {
-            // Simply remove the visual error state when the user starts typing again
-            setInputError(false);
+            setInputError(false); // Clear error when the user starts typing
             successMsg.classList.add('hidden');
         });
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('ServiceWorker registration failed: ', error);
-                    });
+                navigator.serviceWorker.register('/sw.js');
+                loadCountries(); // Load country data on app load
             });
+        } else {
+            loadCountries(); // Load country data if not using Service Worker
         }
     </script>
 </body>
